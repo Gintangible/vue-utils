@@ -4,6 +4,7 @@
       :data="tableData"
       border
       stripe
+      :empty-text="emptyText"
       @row-click="handleRowClick"
       @row-dblclick="handleRowDbClick"
       @selection-change="handleSelectionChange"
@@ -73,6 +74,8 @@ export default {
       type: Array,
       required: true,
     },
+
+    emptyText: String,
 
     // 显示 checkbox 列
     showSelection: Boolean,

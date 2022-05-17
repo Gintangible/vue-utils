@@ -29,6 +29,8 @@
         :label="th.label"
         align="center"
         :width="th.width"
+        :label-class-name="th.labelClassName"
+        :class-name="th.className"
       >
         <template #default="{row, $index}">
           <slot
@@ -75,6 +77,7 @@ export default {
       required: true,
     },
 
+    // eslint-disable-next-line
     emptyText: String,
 
     // 显示 checkbox 列
@@ -111,8 +114,9 @@ export default {
     getRow(row, prop) {
       const p = prop.trim().split('.');
       let c = row;
+
       p.forEach(i => {
-        c = c && c[i] || '';
+        c = c && c[i];
       });
       return c;
     },
@@ -124,7 +128,7 @@ export default {
 
     // 某一行被双击击
     handleRowDbClick(row) {
-      this.$emit('row-dbclick', row);
+      this.$emit('row-dblclick', row);
     },
 
     // 选中事件

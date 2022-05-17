@@ -73,8 +73,10 @@ export default {
         left: 0,
         top: 0,
       },
-      MAX_X: +document.body.clientWidth - 20,
-      MAX_Y: +document.body.clientHeight - 20,
+      MIN_X: 0,
+      MIN_Y: 0,
+      MAX_X: +document.body.clientWidth - 100,
+      MAX_Y: +document.body.clientHeight - 50,
     };
   },
 
@@ -97,9 +99,11 @@ export default {
     this.getDragInitStyle();
     this.$nextTick(() => {
       this.moveEle = this.$refs.drag.querySelector(this.moveClass);
-      this.moveEle.addEventListener('mousedown', this.dragMove);
-      this.moveEle.addEventListener('dblclick', this.toggleDragFull);
-      this.toggleMoveStyle();
+      if (this.moveEle) {
+        this.moveEle.addEventListener('mousedown', this.dragMove);
+        this.moveEle.addEventListener('dblclick', this.toggleDragFull);
+        this.toggleMoveStyle();
+      }
     });
   },
 
@@ -144,16 +148,28 @@ export default {
       }
     },
 
+    getDistance(d, isVertical) {
+      const minD = isVertical ? this.MIN_Y : this.MIN_X;
+      const maxD = isVertical ? this.MAX_Y : this.MAX_X;
+      if (d <= minD) {
+        d = 0;
+      }
+      if (d >= maxD) {
+        d = maxD;
+      }
+      return d;
+    },
+
     // 移动元素
     dragMove(e) {
       e.preventDefault();
       const DIS_X = e.clientX - this.$refs.drag.offsetLeft;
       const DIS_Y = e.clientY - this.$refs.drag.offsetTop;
       document.onmousemove = (e) => {
-        const EX = e.clientX >= this.MAX_X ? this.MAX_X : e.clientX;
-        const EY = e.clientY >= this.MAX_Y ? this.MAX_Y : e.clientY;
-        this.elStyle.left = EX - DIS_X;
-        this.elStyle.top = EY - DIS_Y;
+        const EX = this.getDistance(e.clientX - DIS_X);
+        const EY = this.getDistance(e.clientY - DIS_Y, true);
+        this.elStyle.left = EX;
+        this.elStyle.top = EY;
       };
 
       document.onmouseup = () => {
@@ -203,6 +219,7 @@ export default {
     // 关闭弹窗
     close() {
       this.$emit('input', false);
+      this.$emit('close');
     },
   },
 };

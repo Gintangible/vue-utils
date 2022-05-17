@@ -24,7 +24,6 @@
 </template>
 
 <script>
-import { logger } from '@njzhyl/common-util';
 const BTN_GROUPS = {
   save: {
     msg: '暂存内容',
@@ -62,7 +61,6 @@ export default {
     },
     // 按钮操作
     handle(name) {
-      logger.debug('button-group handle = {0}', name);
       const btn = BTN_GROUPS[name];
       this.$confirm(btn.msg, '操作', {
         confirmButtonText: '确定',

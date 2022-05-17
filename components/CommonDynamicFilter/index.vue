@@ -3,78 +3,87 @@
     ref="filterForm"
     :inline="inline"
     :model="query"
+    size="small"
     :label-width="labelWidth"
     :rules="rules"
     class="filter-form"
   >
-    <el-row
-      v-for="(area, i) in queryArea"
-      :key="i"
-    >
-      <template v-for="(formItem, index) in area">
-        <el-form-item
-          :key="index"
-          :label="formItem.label"
-          :prop="formItem.prop"
-          :rules="formItem.rule || []"
+    <template v-for="(formItem, index) in form">
+      <el-form-item
+        :key="index"
+        :label="formItem.label"
+        :prop="formItem.prop"
+        :rules="formItem.rule || []"
+      >
+        <el-input
+          v-if="!formItem.type && !formItem.slot"
+          v-model="query[formItem.prop]"
+          :style="formItemStyle"
+          :placeholder="formItem.placeholder"
+          :disabled="formItem.disabled"
+          :readonly="formItem.readonly"
+          clearable
+        />
+        <el-select
+          v-if="formItem.type === 'select'"
+          v-model="query[formItem.prop]"
+          :style="formItemStyle"
+          :readonly="formItem.readonly"
+          :disabled="formItem.disabled"
+          clearable
+          :placeholder="formItem.placeholder"
         >
-          <el-input
-            v-if="!formItem.type || formItem.type === 'input'"
-            v-model="query[formItem.prop]"
-            :placeholder="formItem.placeholder"
-            clearable
+          <el-option
+            v-for="item in (formItem.options || [])"
+            :key="item.key"
+            :label="item.name"
+            :value="item.value"
           />
-          <el-select
-            v-if="formItem.type === 'select'"
-            v-model="query[formItem.prop]"
-            clearable
-            :placeholder="formItem.placeholder"
-          >
-            <el-option
-              v-for="item in formItem.options"
-              :key="item.key"
-              :label="item.label"
-              :value="item.key"
-            />
-          </el-select>
-          <el-date-picker
-            v-if="formItem.type === 'datePicker'"
-            v-model="query[formItem.prop]"
-            :type="formItem.dateType"
-            range-separator="至"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
-          />
-          <slot
-            v-if="formItem.slot"
-            :name="formItem.slot"
-            :form="form"
-          />
-        </el-form-item>
-      </template>
-      <el-form-item v-if="i === len">
-        <el-button
-          size="medium"
-          type="primary"
-          @click="handleSearch('filterForm')"
-        >
-          查询
-        </el-button>
-        <el-button
-          size="medium"
-          @click="handeleReset('filterForm')"
-        >
-          重置
-        </el-button>
+        </el-select>
+        <el-date-picker
+          v-if="formItem.type === 'datePicker'"
+          v-model="query[formItem.prop]"
+          :type="formItem.dateType"
+          :style="formItemStyle"
+          :default-time="formItem.defaultTime"
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+        />
+        <slot
+          v-if="formItem.slot"
+          :name="formItem.slot"
+          :form="form"
+          :style="formItemStyle"
+        />
       </el-form-item>
-    </el-row>
+    </template>
+
+    <el-form-item>
+      <el-button
+        size="mini"
+        type="primary"
+        @click="handleSearch"
+      >
+        查询
+      </el-button>
+      <el-button
+        size="mini"
+        @click="handeleReset"
+      >
+        重置
+      </el-button>
+      <slot name="button" />
+    </el-form-item>
   </el-form>
 </template>
 
 <script>
-import { logger, clone } from '@njzhyl/common-util';
+import { cloneDeep } from 'lodash';
 
 export default {
+  name: 'CommonDynamicFilter',
+
   props: {
     // eslint-disable-next-line
     filter: Object,
@@ -90,14 +99,14 @@ export default {
       default: true,
     },
 
-    splitNum: {
-      type: Number,
-      default: 4,
-    },
-
     labelWidth: {
       type: String,
       default: '120px',
+    },
+
+    contentWidth: {
+      type: String,
+      default: '240px',
     },
 
     rules: {
@@ -105,6 +114,7 @@ export default {
       default: () => {},
     },
   },
+
   data() {
     return {
       query: {},
@@ -117,45 +127,42 @@ export default {
     filter: {
       deep: true,
       handler(val) {
-        this.query = clone(val);
+        this.query = cloneDeep(val);
       },
     },
-    form: {
-      deep: true,
-      handler() {
-        this.getRowFormItem();
-      },
+  },
+
+  computed: {
+    formItemStyle() {
+      return {
+        width: this.contentWidth,
+      };
     },
   },
 
   created() {
-    this.getRowFormItem();
-    this.query = clone(this.filter);
+    this.query = cloneDeep(this.filter);
+  },
+
+  mounted() {
+    this.handleSearch();
   },
 
   methods: {
-    getRowFormItem() {
-      const queryArea = [];
-      this.len = Math.floor(this.form.length / this.splitNum)
-      for (let i = 0; i <= this.len; i++) {
-        const j = this.splitNum * i;
-        queryArea.push(this.form.slice(j, j + this.splitNum));
-      }
-      this.queryArea = queryArea;
-    },
     // 查询
-    handleSearch(formName) {
+    handleSearch() {
       logger.debug('CommonDynamicFilter handleSearch query = {0}', this.query);
-      this.$refs[formName].validate((valid) => {
+      this.$refs.filterForm.validate((valid) => {
         if (valid) {
-          this.$emit('query', this.query);
+          this.$emit('query', cloneDeep(this.query));
         } else {
           return false;
         }
       });
     },
-    handeleReset(formName) {
-      this.$refs[formName].resetFields();
+    handeleReset() {
+      this.$refs.filterForm.resetFields();
+      this.$emit('reset');
     },
   },
 };

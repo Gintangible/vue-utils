@@ -1,5 +1,5 @@
 // 本地获取所有数据并进行分页
-import { logger, clone } from '@njzhyl/common-util';
+import { cloneDeep } from 'lodash';
 import Page from '@/models/Page';
 
 const PAGE_ALL_MIXIN = {
@@ -13,7 +13,6 @@ const PAGE_ALL_MIXIN = {
 
   watch: {
     data() {
-      logger.debug('pageAll.watch.data data = {0}', this.data);
       const PAGE_INDEX = this.pageIndexReset ? 1 : this.page.page_index;
       this.getShowList(PAGE_INDEX, this.page.page_size);
     },
@@ -44,10 +43,8 @@ const PAGE_ALL_MIXIN = {
       // 如果 data 从vuex取出来的，需要进行深copy，不然在页面中改变不会触发
       this.page.total_count = this.data.length;
       const sliceData = this.data.slice((pageIndex - 1) * pageSize, pageIndex * pageSize);
-      logger.debug('pageAll.getShowList sliceData = {0}', sliceData);
-      this.originalData = clone(sliceData);
-      this.showData = clone(sliceData);
-      logger.debug('pageAll.getShowList pageIndex = {0}, pageSize = {1}, showData = {2}', pageIndex, pageSize, this.showData);
+      this.originalData = cloneDeep(sliceData);
+      this.showData = cloneDeep(sliceData);
       this.pageChangeCb && this.pageChangeCb();
     },
   },

@@ -151,7 +151,6 @@ export default {
   methods: {
     // 查询
     handleSearch() {
-      logger.debug('CommonDynamicFilter handleSearch query = {0}', this.query);
       this.$refs.filterForm.validate((valid) => {
         if (valid) {
           this.$emit('query', cloneDeep(this.query));
